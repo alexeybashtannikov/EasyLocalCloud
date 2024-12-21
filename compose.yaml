@@ -1,0 +1,56 @@
+name: remotion
+
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=easyclouddb'
+      - 'POSTGRES_PASSWORD=bestuser'
+      - 'POSTGRES_USER=bestuser'
+      - 'TZ=UTC'
+      - 'PGTZ=UTC'
+    ports:
+      - '5432:5432'
+    networks:
+      - easycloud_nw
+    volumes:
+      - easycloud_vol:/var/lib/postgresql/data
+
+  frontend:
+    build:
+      context: ./frontend # Укажите путь к вашему приложению React
+      dockerfile: Dockerfile
+    ports:
+      - '80:3000' # Пробрасываем порт для доступа к приложению
+    networks:
+      - easycloud_nw
+    environment:
+      #      - NODE_ENV=development # Устанавливаем режим разработки
+      - HOST=0.0.0.0
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend # Укажите путь к вашему приложению Spring Boot
+      dockerfile: Dockerfile # Убедитесь, что у вас есть Dockerfile в этой директории
+    ports:
+      - '8080:8080' # Пробрасываем порт для доступа к приложению Spring Boot
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/easyclouddb # URL для подключения к базе данных
+      SPRING_DATASOURCE_USERNAME: bestuser
+      SPRING_DATASOURCE_PASSWORD: bestuser
+    depends_on:
+      - postgres # Указываем зависимость от сервиса postgres
+    networks:
+      - easycloud_nw
+
+networks:
+  easycloud_nw:
+    name: "easycloud_nw"
+
+volumes:
+  easycloud_vol:
+    name: "easycloud_vol"
+
+
